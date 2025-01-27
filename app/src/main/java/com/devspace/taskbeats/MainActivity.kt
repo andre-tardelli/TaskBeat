@@ -5,6 +5,9 @@ import android.os.Bundle
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import androidx.room.Room
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.GlobalScope
+import kotlinx.coroutines.launch
 
 class MainActivity : AppCompatActivity() {
 
@@ -66,10 +69,23 @@ class MainActivity : AppCompatActivity() {
                 isSelected = it.isSelected
             )
         }
-
-        categoryDao.insetAll(categoriesEntity)
+        GlobalScope.launch(Dispatchers.IO){
+            categoryDao.insetAll(categoriesEntity)
+        }
     }
 
+    private fun getCategoriesFromDataBase(adapter: CategoryListAdapter){
+        GlobalScope.launch(Dispatchers.IO) {
+            val categoriesFromDB: List<CategoryEntity> = categoryDao.getAll()
+            val categoriesUiData = categoriesFromDB.map {
+                CategoryUiData(
+                    name = it.name,
+                    isSelected = it.isSelected
+                )
+            }
+            adapter.submitList(categoriesUiData)
+        }
+    }
 }
 
 val categories = listOf(

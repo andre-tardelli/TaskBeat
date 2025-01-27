@@ -3,6 +3,7 @@ package com.devspace.taskbeats
 import androidx.room.Dao
 import androidx.room.Insert
 import androidx.room.Query
+import androidx.room.OnConflictStrategy
 
 @Dao
 interface CategoryDao {
@@ -10,6 +11,6 @@ interface CategoryDao {
     @Query("Select * From categoryentity")
     fun getAll():List<CategoryEntity>
 
-    @Insert
+    @Insert(onConflict = OnConflictStrategy.REPLACE)
     fun insetAll(categoryEntity: List<CategoryEntity>)
 }
