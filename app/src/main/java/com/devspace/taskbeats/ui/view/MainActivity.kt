@@ -129,7 +129,6 @@ class MainActivity : AppCompatActivity() {
                 adapter.submitList(tasksUiData)
             }
         }
-
     }
 
     private fun insertCategory(categoryEntity: CategoryEntity) {
