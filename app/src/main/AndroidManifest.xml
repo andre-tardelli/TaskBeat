@@ -13,7 +13,11 @@
         android:theme="@style/Theme.TaskBeats"
         tools:targetApi="31">
         <activity
+<<<<<<< HEAD
             android:name=".ui.view.MainActivity"
+=======
+            android:name=".MainActivity"
+>>>>>>> 5e829a2f60b00fcd8a2b505b11e89efb0da39bdb
             android:exported="true">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
