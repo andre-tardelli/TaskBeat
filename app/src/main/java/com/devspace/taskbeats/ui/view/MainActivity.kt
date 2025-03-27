@@ -10,6 +10,7 @@ import com.devspace.taskbeats.data.local.TaskBeatDatabase
 import com.devspace.taskbeats.data.local.TaskEntity
 import com.devspace.taskbeats.data.model.CategoryUiData
 import com.devspace.taskbeats.data.model.TaskUiData
+import com.devspace.taskbeats.ui.CreateCategoryBottomSheet
 import com.devspace.taskbeats.ui.adapter.CategoryListAdapter
 import com.devspace.taskbeats.ui.adapter.TaskListAdapter
 import kotlinx.coroutines.Dispatchers
@@ -21,12 +22,14 @@ class MainActivity : AppCompatActivity() {
 
     private var categories = listOf<CategoryUiData>()
     private var tasks = listOf<TaskUiData>()
+    private val categoryAdapter = CategoryListAdapter()
 
     private val db by lazy {
         Room.databaseBuilder(
             applicationContext,
             TaskBeatDatabase::class.java, "database-task-beat"
-        ).build()
+        ).fallbackToDestructiveMigration()
+         .build()
     }
 
     private val categoryDao by lazy {
@@ -45,61 +48,73 @@ class MainActivity : AppCompatActivity() {
         val rvTask = findViewById<RecyclerView>(R.id.rv_tasks)
 
         val taskAdapter = TaskListAdapter()
-        val categoryAdapter = CategoryListAdapter()
+
 
         categoryAdapter.setOnClickListener { selected ->
-            val categoryTemp = categories.map { item ->
-                when {
-                    item.name == selected.name && !item.isSelected -> item.copy(isSelected = true)
-                    item.name == selected.name && item.isSelected -> item.copy(isSelected = false)
-                    else -> item
+            if(selected.name == "+") {
+                val createCategoryBottomSheet = CreateCategoryBottomSheet { categoryName ->
+                    val categoryEntity = CategoryEntity(
+                        name = categoryName,
+                        isSelected = false
+                    )
+
+                    insertCategory(categoryEntity)
                 }
+
+                createCategoryBottomSheet.show(supportFragmentManager, "createCategoryBottomSheet")
+            } else {
+                val categoryTemp = categories.map { item ->
+                    when {
+                        item.name == selected.name && !item.isSelected -> item.copy(isSelected = true)
+                        item.name == selected.name && item.isSelected -> item.copy(isSelected = false)
+                        else -> item
+                    }
+                }
+
+                val taskTemp =
+                    if (selected.name != "ALL") {
+                        tasks.filter { it.category == selected.name }
+                    } else {
+                        tasks
+                    }
+                taskAdapter.submitList(taskTemp)
+
+                categoryAdapter.submitList(categoryTemp)
             }
-
-            val taskTemp =
-                if (selected.name != "ALL") {
-                    tasks.filter { it.category == selected.name }
-                } else {
-                    tasks
-                }
-            taskAdapter.submitList(taskTemp)
-
-            categoryAdapter.submitList(categoryTemp)
         }
 
         rvCategory.adapter = categoryAdapter
-        getCategoriesFromDataBase(categoryAdapter)
+        GlobalScope.launch(Dispatchers.IO) {
+            getCategoriesFromDataBase()
+        }
+
 
         rvTask.adapter = taskAdapter
         getTasksFromDataBase(taskAdapter)
     }
 
-    private fun getCategoriesFromDataBase(adapter: CategoryListAdapter) {
-        GlobalScope.launch (Dispatchers.IO) {
-            val categoriesFromDb: List<CategoryEntity> = categoryDao.getAll()
-            val categoriesUiData = categoriesFromDb.map {
-                CategoryUiData(
-                    name = it.name,
-                    isSelected = it.isSelected
-                )
-            }
-
-                .toMutableList()
-
-            categoriesUiData.add(
-                CategoryUiData(
-                    name = "+",
-                    isSelected = false,
-                )
+    private fun getCategoriesFromDataBase() {
+        val categoriesFromDb: List<CategoryEntity> = categoryDao.getAll()
+        val categoriesUiData = categoriesFromDb.map {
+            CategoryUiData(
+                name = it.name,
+                isSelected = it.isSelected
             )
+        }
 
+            .toMutableList()
+
+        categoriesUiData.add(
+            CategoryUiData(
+                name = "+",
+                isSelected = false,
+            )
+        )
+        GlobalScope.launch(Dispatchers.Main) {
             categories = categoriesUiData
-            withContext(Dispatchers.Main){
-                adapter.submitList(categoriesUiData)
-            }
+            categoryAdapter.submitList(categoriesUiData)
         }
     }
-
     private fun getTasksFromDataBase(adapter: TaskListAdapter) {
         GlobalScope.launch (Dispatchers.IO) {
             val tasksFromDb: List<TaskEntity> = taskDao.getAll()
@@ -109,11 +124,19 @@ class MainActivity : AppCompatActivity() {
                     category = it.category
                 )
             }
-
-            tasks = tasksUiData
-            withContext(Dispatchers.Main) {
+            GlobalScope.launch(Dispatchers.Main) {
+                tasks = tasksUiData
                 adapter.submitList(tasksUiData)
             }
         }
+
+    }
+
+    private fun insertCategory(categoryEntity: CategoryEntity) {
+        GlobalScope.launch (Dispatchers.IO) {
+            categoryDao.inset(categoryEntity)
+            getCategoriesFromDataBase()
+        }
+
     }
 }
