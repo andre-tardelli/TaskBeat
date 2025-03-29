@@ -4,11 +4,7 @@
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-<<<<<<< HEAD
     tools:context=".ui.view.MainActivity">
-=======
-    tools:context=".MainActivity">
->>>>>>> 5e829a2f60b00fcd8a2b505b11e89efb0da39bdb
 
     <TextView
         android:id="@+id/tv_title"
