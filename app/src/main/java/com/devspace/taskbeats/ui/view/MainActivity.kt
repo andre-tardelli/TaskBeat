@@ -11,8 +11,10 @@ import com.devspace.taskbeats.data.local.TaskEntity
 import com.devspace.taskbeats.data.model.CategoryUiData
 import com.devspace.taskbeats.data.model.TaskUiData
 import com.devspace.taskbeats.ui.CreateCategoryBottomSheet
+import com.devspace.taskbeats.ui.CreateTaskBottomSheet
 import com.devspace.taskbeats.ui.adapter.CategoryListAdapter
 import com.devspace.taskbeats.ui.adapter.TaskListAdapter
+import com.google.android.material.floatingactionbutton.FloatingActionButton
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.GlobalScope
 import kotlinx.coroutines.launch
@@ -46,6 +48,19 @@ class MainActivity : AppCompatActivity() {
 
         val rvCategory = findViewById<RecyclerView>(R.id.rv_categories)
         val rvTask = findViewById<RecyclerView>(R.id.rv_tasks)
+        val fabCreateTask = findViewById<FloatingActionButton>(R.id.fab_creat_task)
+
+        fabCreateTask.setOnClickListener {
+            val createTaskBottomSheet = CreateTaskBottomSheet(
+                categories
+            ) { taskToBeCreated ->
+
+            }
+            createTaskBottomSheet.show(
+                supportFragmentManager,
+                "createTaskBottomShee"
+            )
+        }
 
         val taskAdapter = TaskListAdapter()
 
